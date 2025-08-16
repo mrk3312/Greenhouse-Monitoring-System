@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+        <meta charset=\"UTF-8\">
+        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+        <link rel="stylesheet" href="../static/styles.css">
+        <script type="text/javascript"src="https://www.gstatic.com/charts/loader.js"></script>
+        <script type="text/javascript">
+                    
+            google.charts.load('current', {packages: ['corechart']});
+            google.charts.setOnLoadCallback(drawChart);
+
+            function drawChart()
+            {
+                const lineChart = google.visualization.arrayToDataTable([
+                [
+                    'Time', 
+                    {% if filters[0][1] == True %}'Temperature'{% endif %}
+                    {% if filters[0][1] == True%},{% endif %}
+                    {% if filters[1][1] == True %}'Humidity'{% endif %}
+                    {% if filters[1][1] == True%},{% endif %}
+                    {% if filters[2][1] == True %}'Light'{% endif %}
+                ],
+                {% for entry in data %}
+                    [
+                    '{{ entry.time }}',
+                    {% if filters[0][1] == True %}{{entry.temperature}}{% endif %}
+                    {% if filters[0][1] == True %},{% endif %}
+                    {% if filters[1][1] == True %}{{entry.humidity}}{% endif %}
+                    {% if filters[1][1] == True %},{% endif %}
+                    {% if filters[2][1] == True %}{{entry.light_intensity}}{% endif %}
+                    ]{% if not loop.last %},{% endif %}
+                {% endfor %}
+                ]);
+                // Set Options
+                const options = {
+                title: 'Measured Data',
+                backgroundColor: '#e9f5af',
+                hAxis: {title: 'Date and Time'},
+                vAxis: {title: 'Value'},
+                colors: [
+                    {% if filters[0][1] == True %}'#FF0000'{% endif %}
+                    {% if filters[0][1] == True %},{% endif %}
+                    {% if filters[1][1] == True %}'#0000FF'{% endif %}
+                    {% if filters[1][1] == True %},{% endif %}
+                    {% if filters[2][1] == True %}'#FFA500'{% endif %}
+                    ],
+                legend: 'legend'
+                };
+                // Draw Chart
+                const chart = new google.visualization.LineChart(document.getElementById('lineChart'));
+                chart.draw(lineChart, options);
+            }
+        </script>
+        <title>Sensors Data</title>
+    </head>
+
+    <body>
+        <div class="text_centered">
+            <h1 class="main_title">Sensors Data</h1>
+            <p class="warning_string">{{ warning }}</p>
+        </div>
+        <div id = "filters-container">
+                <form id = "filter-form" method = "POST" action = "/data">
+                    <div id="checkboxes">
+                        <div id="filter-temperature">
+                            <label for="temperature">Temperature</label>
+                            <input type="checkbox" id="temperature" name="temperature" {{'checked' if filters[0][1] == True else ''}}
+                            onChange="document.forms.filter-form.submit();">
+                        </div>
+                        
+                        <div id="filter-humidity">
+                            <label for="humidity">Humidity</label>
+                            <input type="checkbox" id="humidity" name="humidity" {{'checked' if filters[1][1] == True else ''}}
+                            onChange="document.forms.filter-form.submit();">
+                        </div>
+
+                        <div id="filter-light">
+                            <label for="light">Light</label>
+                            <input type="checkbox" id="light" name="light" {{'checked' if filters[2][1] == True else ''}}
+                            onChange="document.forms.filter-form.submit();">
+                        </div>
+                    </div>
+                    
+                    <div id="fields">
+                        <div id="filter-range_count">
+                            <label for="range_count">Range Count</label>
+                            <input type="text" class="range_count" id="range_count" name="range_count" value="{{ filters[3][0] }}"
+                            onChange="document.forms.filter-form.submit();">
+                        </div>
+                        <div id="filter-range_type">
+                            <label for="range_type">Range Type</label>
+                            <select id="range_type" name="range_type" onChange="document.forms.filter-form.submit();">
+                                <option value="s"{% if filters[4][0] == "s" %}selected{% endif %}>Seconds</option>
+                                <option value="m"{% if filters[4][0] == "m" %}selected{% endif %}>Minutes</option>
+                                <option value="h"{% if filters[4][0] == "h" %}selected{% endif %}>Hours</option>
+                                <option value="d"{% if filters[4][0] == "d" %}selected{% endif %}>Days</option>
+                                <option value="w"{% if filters[4][0] == "w" %}selected{% endif %}>Weeks</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+        </div>
+        
+        <div id="lineChart" style="width: 1000px; height: 400px"></div>
+
+    </body>
+
+</html>
